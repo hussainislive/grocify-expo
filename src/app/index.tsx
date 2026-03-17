@@ -3,7 +3,9 @@ import { StyleSheet, Text, View } from "react-native";
 export default function Index() {
   return (
     <View style={styles.container}>
-      <Text>Hello World! well macbook is pretty fast</Text>
+      <Text className="text-red-500">
+        Hello World! well macbook is pretty fast
+      </Text>
     </View>
   );
 }
