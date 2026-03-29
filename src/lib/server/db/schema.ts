@@ -1,6 +1,6 @@
 import { bigint, boolean, integer, pgTable, text } from "drizzle-orm/pg-core";
 
-export const groceryItems = pgTable("groecery_items", {
+export const groceryItems = pgTable("grocery_items", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
   category: text("category").notNull(),
