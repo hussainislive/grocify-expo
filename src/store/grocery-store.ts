@@ -25,12 +25,8 @@ export type CreateItemInput = {
   priority: GroceryPriority;
 };
 
-type ItemsResponse = {
-  items: GroceryItem[];
-};
-type ItemResponse = {
-  item: GroceryItem;
-};
+type ItemsResponse = { items: GroceryItem[] };
+type ItemResponse = { item: GroceryItem };
 
 type GroceryStore = {
   items: GroceryItem[];
@@ -53,17 +49,18 @@ export const useGroceryStore = create<GroceryStore>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const res = await fetch("/api/items");
-      const payload: ItemsResponse = (await res.json()) as ItemsResponse;
+      const payload = (await res.json()) as ItemsResponse;
 
       if (!res.ok) throw new Error(`Request failed (${res.status})`);
       set({ items: payload.items });
     } catch (error) {
-      console.error("Failed to load items:", error);
+      console.error("Error loading items:", error);
       set({ error: "Something went wrong" });
     } finally {
       set({ isLoading: false });
     }
   },
+
   addItem: async (input) => {
     set({ error: null });
     try {

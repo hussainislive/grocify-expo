@@ -3,7 +3,7 @@ import { createGroceryItem, listGroceryItems } from "@/lib/server/db-actions";
 export async function GET() {
   try {
     const items = await listGroceryItems();
-    return Response.json(items);
+    return Response.json({ items });
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "Failed to fetch items";
@@ -29,7 +29,7 @@ export async function POST(request: Request) {
       quantity,
       priority,
     });
-    return Response.json(item, { status: 201 });
+    return Response.json({ item }, { status: 201 });
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "Failed to create item";
