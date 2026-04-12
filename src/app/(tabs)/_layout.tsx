@@ -8,7 +8,7 @@ import { useEffect } from "react";
 export default function TabsLayout() {
   const { isSignedIn, isLoaded, getToken } = useAuth();
 
-  const { loadItems, setAuthToken } = useGroceryStore();
+  const { loadItems, setGetToken } = useGroceryStore();
 
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
@@ -17,12 +17,10 @@ export default function TabsLayout() {
   useEffect(() => {
     if (!isSignedIn) return;
 
-    // Fetch a fresh Clerk JWT, inject it into the store, then load items.
-    // getToken() returns null when signed out, so this is safe.
-    getToken().then((token) => {
-      setAuthToken(token);
-      loadItems();
-    });
+    // Pass getToken directly so the store calls it fresh before every request.
+    // Cast needed because Clerk's GetToken accepts optional options we don't use.
+    setGetToken(getToken as () => Promise<string | null>);
+    loadItems();
   }, [isSignedIn]);
 
   if (!isLoaded) {

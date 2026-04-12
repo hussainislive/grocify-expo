@@ -59,8 +59,12 @@ type GroceryStore = {
   items: GroceryItem[];
   isLoading: boolean;
   error: string | null;
-  /** Call this from a React component (e.g. layout) after Clerk token is available */
-  setAuthToken: (token: string | null) => void;
+  /**
+   * Register the Clerk getToken function so the store can always fetch a
+   * fresh, valid JWT before every API call. Call this from the tabs layout
+   * once Clerk is loaded.
+   */
+  setGetToken: (fn: (() => Promise<string | null>) | null) => void;
   loadItems: () => Promise<void>;
   addItem: (input: CreateItemInput) => Promise<GroceryItem | void>;
   updateQuantity: (id: string, quantity: number) => Promise<void>;
@@ -70,25 +74,29 @@ type GroceryStore = {
 };
 
 // Stored outside Zustand state so it never triggers re-renders
-let _authToken: string | null = null;
+let _getToken: (() => Promise<string | null>) | null = null;
 
-const authHeaders = (): Record<string, string> =>
-  _authToken ? { Authorization: `Bearer ${_authToken}` } : {};
+/** Always fetches a fresh token via Clerk — handles caching & refresh internally */
+const freshAuthHeaders = async (): Promise<Record<string, string>> => {
+  if (!_getToken) return {};
+  const token = await _getToken();
+  return token ? { Authorization: `Bearer ${token}` } : {};
+};
 
 export const useGroceryStore = create<GroceryStore>((set, get) => ({
   items: [],
   isLoading: false,
   error: null,
 
-  setAuthToken: (token) => {
-    _authToken = token;
+  setGetToken: (fn) => {
+    _getToken = fn;
   },
 
   loadItems: async () => {
     set({ isLoading: true, error: null });
     try {
       const res = await fetch(getApiUrl("/api/items"), {
-        headers: authHeaders(),
+        headers: await freshAuthHeaders(),
       });
       const payload = await readResponsePayload<ItemsResponse>(res);
 
@@ -109,7 +117,7 @@ export const useGroceryStore = create<GroceryStore>((set, get) => ({
     try {
       const res = await fetch(getApiUrl("/api/items"), {
         method: "POST",
-        headers: { "Content-Type": "application/json", ...authHeaders() },
+        headers: { "Content-Type": "application/json", ...(await freshAuthHeaders()) },
         body: JSON.stringify({
           name: input.name,
           category: input.category,
@@ -138,7 +146,7 @@ export const useGroceryStore = create<GroceryStore>((set, get) => ({
     try {
       const res = await fetch(getApiUrl(`/api/items/${id}`), {
         method: "PATCH",
-        headers: { "Content-Type": "application/json", ...authHeaders() },
+        headers: { "Content-Type": "application/json", ...(await freshAuthHeaders()) },
         body: JSON.stringify({ quantity: nextQuantity }),
       });
       const payload = await readResponsePayload<ItemResponse>(res);
@@ -166,7 +174,7 @@ export const useGroceryStore = create<GroceryStore>((set, get) => ({
     try {
       const res = await fetch(getApiUrl(`/api/items/${id}`), {
         method: "PATCH",
-        headers: { "Content-Type": "application/json", ...authHeaders() },
+        headers: { "Content-Type": "application/json", ...(await freshAuthHeaders()) },
         body: JSON.stringify({ purchased: nextPurchased }),
       });
 
@@ -192,7 +200,7 @@ export const useGroceryStore = create<GroceryStore>((set, get) => ({
     try {
       const res = await fetch(getApiUrl(`/api/items/${id}`), {
         method: "DELETE",
-        headers: authHeaders(),
+        headers: await freshAuthHeaders(),
       });
       const payload = await readResponsePayload(res);
       if (!res.ok) throw new Error(getErrorMessage(res.status, payload));
@@ -211,7 +219,7 @@ export const useGroceryStore = create<GroceryStore>((set, get) => ({
     try {
       const res = await fetch(getApiUrl("/api/items/clear-purchased"), {
         method: "POST",
-        headers: authHeaders(),
+        headers: await freshAuthHeaders(),
       });
       const payload = await readResponsePayload(res);
       if (!res.ok) throw new Error(getErrorMessage(res.status, payload));
