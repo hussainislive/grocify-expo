@@ -4,18 +4,17 @@
     "slug": "grocify",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/grocify-icon.png",
     "scheme": "grocify",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "icon": "./assets/expo.icon",
+      "icon": "./assets/images/grocify-icon.png",
       "bundleIdentifier": "com.anonymous.grocify"
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/images/android-icon-foreground.png",
-        "backgroundImage": "./assets/images/android-icon-background.png",
+        "backgroundColor": "#06281E",
+        "foregroundImage": "./assets/images/grocify-android-foreground.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
@@ -31,10 +30,17 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#208AEF",
+          "backgroundColor": "#06281E",
+          "image": "./assets/images/grocify-splash.png",
+          "imageWidth": 170,
           "android": {
-            "image": "./assets/images/splash-icon.png",
-            "imageWidth": 76
+            "image": "./assets/images/grocify-splash.png",
+            "imageWidth": 170
+          },
+          "dark": {
+            "backgroundColor": "#041A14",
+            "image": "./assets/images/grocify-splash.png",
+            "imageWidth": 170
           }
         }
       ],
@@ -51,6 +57,13 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "a9b9218c-a98f-4910-9cb7-5e8e79809e36"
+      }
+    },
+    "owner": "hussainislive"
   }
 }

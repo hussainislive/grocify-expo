@@ -7,7 +7,7 @@ import ListHeroCard from "@/components/list/ListHeroCard";
 import TabScreenBackground from "@/components/TabScreenBackground";
 
 export default function ListScreen() {
-  const { items } = useGroceryStore();
+  const { items, error } = useGroceryStore();
 
   const pendingItems = items.filter((item) => !item.purchased);
 
@@ -31,6 +31,12 @@ export default function ListScreen() {
               {pendingItems.length} active
             </Text>
           </View>
+
+          {error ? (
+            <View className="rounded-2xl border border-destructive bg-destructive px-3 py-2">
+              <Text className="text-center text-sm text-white">{error}</Text>
+            </View>
+          ) : null}
         </View>
       }
       ListFooterComponent={<CompletedItems />}
