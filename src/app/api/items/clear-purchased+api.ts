@@ -1,8 +1,15 @@
+import {
+  getUserIdFromRequest,
+  unauthorizedResponse,
+} from "@/lib/server/auth";
 import { clearPurchasedItems } from "@/lib/server/db-actions";
 
-export async function POST() {
+export async function POST(request: Request) {
+  const userId = getUserIdFromRequest(request);
+  if (!userId) return unauthorizedResponse();
+
   try {
-    await clearPurchasedItems();
+    await clearPurchasedItems(userId);
     return Response.json({ message: "Purchased items cleared successfully" });
   } catch (error) {
     const message =

@@ -59,6 +59,8 @@ type GroceryStore = {
   items: GroceryItem[];
   isLoading: boolean;
   error: string | null;
+  /** Call this from a React component (e.g. layout) after Clerk token is available */
+  setAuthToken: (token: string | null) => void;
   loadItems: () => Promise<void>;
   addItem: (input: CreateItemInput) => Promise<GroceryItem | void>;
   updateQuantity: (id: string, quantity: number) => Promise<void>;
@@ -67,15 +69,27 @@ type GroceryStore = {
   clearPurchased: () => Promise<void>;
 };
 
+// Stored outside Zustand state so it never triggers re-renders
+let _authToken: string | null = null;
+
+const authHeaders = (): Record<string, string> =>
+  _authToken ? { Authorization: `Bearer ${_authToken}` } : {};
+
 export const useGroceryStore = create<GroceryStore>((set, get) => ({
   items: [],
   isLoading: false,
   error: null,
 
+  setAuthToken: (token) => {
+    _authToken = token;
+  },
+
   loadItems: async () => {
     set({ isLoading: true, error: null });
     try {
-      const res = await fetch(getApiUrl("/api/items"));
+      const res = await fetch(getApiUrl("/api/items"), {
+        headers: authHeaders(),
+      });
       const payload = await readResponsePayload<ItemsResponse>(res);
 
       if (!res.ok) throw new Error(getErrorMessage(res.status, payload));
@@ -95,7 +109,7 @@ export const useGroceryStore = create<GroceryStore>((set, get) => ({
     try {
       const res = await fetch(getApiUrl("/api/items"), {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...authHeaders() },
         body: JSON.stringify({
           name: input.name,
           category: input.category,
@@ -116,6 +130,7 @@ export const useGroceryStore = create<GroceryStore>((set, get) => ({
       set({ error: message });
     }
   },
+
   updateQuantity: async (id, quantity) => {
     const nextQuantity = Math.max(1, quantity);
     set({ error: null });
@@ -123,7 +138,7 @@ export const useGroceryStore = create<GroceryStore>((set, get) => ({
     try {
       const res = await fetch(getApiUrl(`/api/items/${id}`), {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...authHeaders() },
         body: JSON.stringify({ quantity: nextQuantity }),
       });
       const payload = await readResponsePayload<ItemResponse>(res);
@@ -141,6 +156,7 @@ export const useGroceryStore = create<GroceryStore>((set, get) => ({
       set({ error: message });
     }
   },
+
   togglePurchased: async (id) => {
     const currentItem = get().items.find((item) => item.id === id);
     if (!currentItem) return;
@@ -150,7 +166,7 @@ export const useGroceryStore = create<GroceryStore>((set, get) => ({
     try {
       const res = await fetch(getApiUrl(`/api/items/${id}`), {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...authHeaders() },
         body: JSON.stringify({ purchased: nextPurchased }),
       });
 
@@ -170,11 +186,13 @@ export const useGroceryStore = create<GroceryStore>((set, get) => ({
       set({ error: message });
     }
   },
+
   removeItem: async (id) => {
     set({ error: null });
     try {
       const res = await fetch(getApiUrl(`/api/items/${id}`), {
         method: "DELETE",
+        headers: authHeaders(),
       });
       const payload = await readResponsePayload(res);
       if (!res.ok) throw new Error(getErrorMessage(res.status, payload));
@@ -187,11 +205,13 @@ export const useGroceryStore = create<GroceryStore>((set, get) => ({
       set({ error: message });
     }
   },
+
   clearPurchased: async () => {
     set({ error: null });
     try {
       const res = await fetch(getApiUrl("/api/items/clear-purchased"), {
         method: "POST",
+        headers: authHeaders(),
       });
       const payload = await readResponsePayload(res);
       if (!res.ok) throw new Error(getErrorMessage(res.status, payload));

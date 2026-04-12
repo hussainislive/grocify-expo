@@ -6,17 +6,24 @@ import { useColorScheme } from "nativewind";
 import { useEffect } from "react";
 
 export default function TabsLayout() {
-  const { isSignedIn, isLoaded } = useAuth();
+  const { isSignedIn, isLoaded, getToken } = useAuth();
 
-  const { loadItems, items } = useGroceryStore();
+  const { loadItems, setAuthToken } = useGroceryStore();
 
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
   const tabTintColor = isDark ? "hsl(142 70% 54%)" : "hsl(147 75% 33%)";
 
   useEffect(() => {
-    loadItems();
-  }, []);
+    if (!isSignedIn) return;
+
+    // Fetch a fresh Clerk JWT, inject it into the store, then load items.
+    // getToken() returns null when signed out, so this is safe.
+    getToken().then((token) => {
+      setAuthToken(token);
+      loadItems();
+    });
+  }, [isSignedIn]);
 
   if (!isLoaded) {
     return null;

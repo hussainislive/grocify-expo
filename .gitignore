@@ -44,5 +44,8 @@ app-example
 /ios
 /android
 
+# Android signing — local secrets, never commit
+android/local.properties
+
 .env.local
 .vercel
